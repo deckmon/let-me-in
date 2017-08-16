@@ -69,7 +69,7 @@ function addRefresher(countArr, tabId, interval) {
                 chrome.browserAction.setBadgeText({text: String(Math.round(value / 100) / 10) + 's', tabId: tabId});
                 chrome.runtime.sendMessage(null, {"type": "state", "tabId": tabId, "value": value});
             } else {
-                if ( detecting && countArr[tabIdStr].current > -3000){
+                if ( detecting ){
                     countArr[tabIdStr].current -= 10;
                     chrome.browserAction.setBadgeText({text: String(Math.round(countArr[tabIdStr].current / 100) / 10) + 's', tabId: tabId});
                     return false;
