@@ -2,6 +2,8 @@ var status = false;
 var countArr = {};
 var debugger_tab_id = null;
 var is_in = false;
+var detecting = false;
+var cur_url = null;
 
 window.onload = function() {
     // Remove interval for removed tabs
@@ -29,13 +31,13 @@ function addRefresher(countArr, tabId, interval) {
         window.clearInterval(countArr[tabIdStr].handle);
         delete countArr[tabIdStr];
     }
-    var cur_url = null;
     is_in = false;
+    detecting = false;
     chrome.tabs.get(tabId,function(tab) {
-        var cur_url = tab.url;
+        cur_url = tab.url.split("#")[0];
         if(debugger_tab_id != tabId){
             if (debugger_tab_id != null){
-                chrome.debugger.detach({tabId:tabId});
+                chrome.debugger.detach({tabId:debugger_tab_id});
             }
             debugger_tab_id = tabId;
             chrome.debugger.attach({tabId:tabId}, "1.0",function() {
@@ -45,6 +47,7 @@ function addRefresher(countArr, tabId, interval) {
                         return;
                     };
                     if (message == "Network.responseReceived" && params.response.url == cur_url) {
+                        detecting = false;
                         if (Math.floor(params.response.status/100) == 2){
                             is_in = true;
                         }
@@ -66,12 +69,13 @@ function addRefresher(countArr, tabId, interval) {
                 chrome.browserAction.setBadgeText({text: String(Math.round(value / 100) / 10) + 's', tabId: tabId});
                 chrome.runtime.sendMessage(null, {"type": "state", "tabId": tabId, "value": value});
             } else {
-                if (tab.status != "complete" && countArr[tabIdStr].current > -3000){
+                if ( detecting && countArr[tabIdStr].current > -3000){
                     countArr[tabIdStr].current -= 10;
                     chrome.browserAction.setBadgeText({text: String(Math.round(countArr[tabIdStr].current / 100) / 10) + 's', tabId: tabId});
                     return false;
                 }
                 countArr[tabIdStr].current = countArr[tabIdStr].interval;
+                detecting = true;
                 chrome.tabs.executeScript({
                     code: 'location.reload()'
                 });
