@@ -47,22 +47,22 @@ function addRefresher(countArr, tabId, interval) {
                         return;
                     };
                     if (message == "Network.responseReceived" && params.response.url == cur_url) {
-                        detecting = false;
                         if (Math.floor(params.response.status/100) == 2){
                             is_in = true;
                         }
+                        detecting = false;
                     };
                 });
             });
         }
     });
     var handle = window.setInterval(function() {
-        if (is_in){
-            removeRefresher(countArr, tabId);
-            chrome.browserAction.setBadgeText({text: 'in!', tabId: tabId});
-            return;
-        };
         chrome.tabs.get(tabId, function(tab) {
+            if (is_in){
+                removeRefresher(countArr, tabId);
+                chrome.browserAction.setBadgeText({text: 'in!', tabId: tabId});
+                return;
+            };
             if (countArr[tabIdStr].current > 0) {
                 countArr[tabIdStr].current -= 10;
                 var value = countArr[tabIdStr].current;
